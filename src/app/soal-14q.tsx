@@ -1,6 +1,6 @@
 "use client";
 
-type SoalPostTestProps = {
+type Soal14QProps = {
   nomor: number;
   jawaban: string;
   submitted: boolean;
@@ -25,13 +25,13 @@ const SOAL = [
   "Apa prinsip 14Q yang berhubungan dengan produk yang benar?",
 ];
 
-export default function SoalPostTest({
+export default function Soal14Q({
   nomor,
   jawaban,
   submitted,
   benar,
   updateJawaban,
-}: SoalPostTestProps) {
+}: Soal14QProps) {
   const soal = SOAL[nomor - 1];
 
   return (
@@ -57,7 +57,9 @@ export default function SoalPostTest({
       <input
         type="text"
         value={jawaban}
-        onChange={(e) => updateJawaban(e.target.value)}
+        onChange={(e) =>
+          updateJawaban(e.target.value)
+        }
         disabled={submitted}
         placeholder="Ketik jawaban Anda..."
         className={
@@ -78,7 +80,9 @@ export default function SoalPostTest({
               : "postAnswerStatus wrongStatus"
           }
         >
-          {benar ? "✓ Jawaban Benar" : "✕ Jawaban Salah"}
+          {benar
+            ? "✓ Jawaban Benar"
+            : "✕ Jawaban Salah"}
         </div>
       )}
     </div>

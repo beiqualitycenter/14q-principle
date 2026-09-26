@@ -1,35 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbz98MxkAuzulANZV35aCx41GAd_K49lJ9cDNX87hQCq6BJ_2TA5tukdqwaMunpkj6GYPw/exec";
-
+  "https://script.google.com/macros/s/AKfycbxIZ7XGCZqXevIuKfiWzr5KzWSahOGRoERMlq5COL-uElOA_m7OPauthib_zGsmj335XA/exec";
 
 export async function POST(
   request: NextRequest
 ) {
-
   try {
-
     const body =
       await request.text();
-
 
     if (
       !body ||
       body.trim() === ""
     ) {
-
       return NextResponse.json(
         {
           success: false,
           message:
-            "Data yang dikirim kosong."
+            "Data yang dikirim kosong.",
         },
         {
-          status: 400
+          status: 400,
         }
       );
-
     }
 
     const response =
@@ -40,37 +34,34 @@ export async function POST(
 
           headers: {
             "Content-Type":
-              "application/json"
+              "application/json",
           },
 
           body,
 
           redirect: "follow",
 
-          cache: "no-store"
+          cache: "no-store",
         }
       );
 
     const responseText =
       await response.text();
 
-
     if (
       !responseText ||
       responseText.trim() === ""
     ) {
-
       return NextResponse.json(
         {
           success: false,
           message:
-            "Google Apps Script tidak mengembalikan response."
+            "Google Apps Script tidak mengembalikan response.",
         },
         {
-          status: 502
+          status: 502,
         }
       );
-
     }
 
     let data: {
@@ -79,16 +70,12 @@ export async function POST(
       row?: number;
     };
 
-
     try {
-
       data =
         JSON.parse(
           responseText
         );
-
     } catch {
-
       return NextResponse.json(
         {
           success: false,
@@ -98,32 +85,28 @@ export async function POST(
             responseText.substring(
               0,
               2000
-            )
+            ),
         },
         {
-          status: 502
+          status: 502,
         }
       );
-
     }
 
     if (
       !data.success
     ) {
-
       return NextResponse.json(
         {
           success: false,
-
           message:
             data.message ||
-            "Data gagal disimpan."
+            "Data gagal disimpan.",
         },
         {
-          status: 500
+          status: 500,
         }
       );
-
     }
 
     return NextResponse.json(
@@ -132,20 +115,16 @@ export async function POST(
 
         message:
           data.message ||
-          "Post Test berhasil disimpan.",
+          "Test berhasil disimpan.",
 
         row:
-          data.row ?? null
+          data.row ?? null,
       },
       {
-        status: 200
+        status: 200,
       }
     );
-
-
   } catch (error) {
-
-
     return NextResponse.json(
       {
         success: false,
@@ -156,13 +135,11 @@ export async function POST(
         detail:
           error instanceof Error
             ? error.message
-            : String(error)
+            : String(error),
       },
       {
-        status: 500
+        status: 500,
       }
     );
-
   }
-
 }
