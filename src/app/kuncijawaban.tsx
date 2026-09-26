@@ -1,8 +1,8 @@
 export const KUNCI_JAWABAN = [
   ["Stop Sign", "Tanda stop", "Tanda berhenti"],
   ["Andon Cord", "EWS", "Early Warning System"],
-  ["Instructions", "Perintah"],
-  ["Process Parameters", "Parameter proses"],
+  ["Instructions", "Instruction", "Perintah"],
+  ["Process Parameters","Process Parameter", "Proces Parameter", "Proces Parameters", "Parameter proses"],
   ["Measurement Equipment"],
   ["Check the Checker"],
   ["TPM", "Total Productive Maintenance"],

@@ -1439,3 +1439,15 @@ select {
   font-weight: 900;
   letter-spacing: 0.7px;
 }
+
+.certificateStatus {
+  margin-top: 18px;
+  padding: 14px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+}
