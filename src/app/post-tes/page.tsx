@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
+
 import Soal14Q from "../soal-14q";
 import { KUNCI_JAWABAN } from "../kuncijawaban";
 
@@ -40,27 +42,30 @@ export default function PostTestPage() {
   const [result, setResult] = useState<ResultData | null>(null);
 
   const [loading, setLoading] = useState(false);
-
   const [saveStatus, setSaveStatus] = useState("");
+  const [certificateStatus, setCertificateStatus] = useState("");
 
-  const [certificateStatus, setCertificateStatus] =
-    useState("");
-
-  useEffect(() => {
-    setTanggal(getToday());
-  }, []);
+  // ==========================================
+  // TANGGAL HARI INI
+  // ==========================================
 
   function getToday() {
     const now = new Date();
 
     const yyyy = now.getFullYear();
-
     const mm = String(now.getMonth() + 1).padStart(2, "0");
-
     const dd = String(now.getDate()).padStart(2, "0");
 
     return `${yyyy}-${mm}-${dd}`;
   }
+
+  useEffect(() => {
+    setTanggal(getToday());
+  }, []);
+
+  // ==========================================
+  // NORMALISASI JAWABAN
+  // ==========================================
 
   function normalizeAnswer(value: string) {
     return value
@@ -69,23 +74,56 @@ export default function PostTestPage() {
       .replace(/\s+/g, " ");
   }
 
-  function checkAnswer(answer: string, nomor: number) {
+  // ==========================================
+  // MENCARI PRINSIP 14Q
+  // ==========================================
+
+  function findPrincipleIndex(answer: string): number {
     const normalized = normalizeAnswer(answer);
 
     if (!normalized) {
-      return false;
+      return -1;
     }
 
-    const keys = KUNCI_JAWABAN[nomor - 1];
-
-    if (!keys) {
-      return false;
-    }
-
-    return keys.some(
-      (key) => normalizeAnswer(key) === normalized
+    return KUNCI_JAWABAN.findIndex((keys) =>
+      keys.some(
+        (key) => normalizeAnswer(key) === normalized
+      )
     );
   }
+
+  // ==========================================
+  // CEK JAWABAN UNIK
+  // ==========================================
+
+  function calculateAnswerDetails(
+    answerList: string[]
+  ): boolean[] {
+    const usedPrinciples = new Set<number>();
+
+    return answerList.map((answer) => {
+      const principleIndex = findPrincipleIndex(answer);
+
+      // Jawaban tidak sesuai kunci
+      if (principleIndex === -1) {
+        return false;
+      }
+
+      // Prinsip sudah pernah dijawab
+      if (usedPrinciples.has(principleIndex)) {
+        return false;
+      }
+
+      // Simpan prinsip yang sudah benar
+      usedPrinciples.add(principleIndex);
+
+      return true;
+    });
+  }
+
+  // ==========================================
+  // UPDATE JAWABAN
+  // ==========================================
 
   function updateAnswer(value: string) {
     if (submitted) {
@@ -101,11 +139,19 @@ export default function PostTestPage() {
     });
   }
 
+  // ==========================================
+  // VALIDASI EMAIL
+  // ==========================================
+
   function isValidEmail(value: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
       value.trim()
     );
   }
+
+  // ==========================================
+  // MULAI POST TEST
+  // ==========================================
 
   function handleStartTest() {
     if (!nama.trim()) {
@@ -119,30 +165,22 @@ export default function PostTestPage() {
     }
 
     if (!department) {
-      alert(
-        "Silakan pilih Department terlebih dahulu."
-      );
+      alert("Silakan pilih Department terlebih dahulu.");
       return;
     }
 
     if (!email.trim()) {
-      alert(
-        "Silakan isi Email terlebih dahulu."
-      );
+      alert("Silakan isi Email terlebih dahulu.");
       return;
     }
 
     if (!isValidEmail(email)) {
-      alert(
-        "Format Email tidak valid. Silakan periksa kembali."
-      );
+      alert("Format Email tidak valid. Silakan periksa kembali.");
       return;
     }
 
     if (!tanggal) {
-      alert(
-        "Silakan pilih Tanggal terlebih dahulu."
-      );
+      alert("Silakan pilih Tanggal terlebih dahulu.");
       return;
     }
 
@@ -158,38 +196,38 @@ export default function PostTestPage() {
     });
   }
 
+  // ==========================================
+  // NAVIGASI SOAL
+  // Posisi scroll tetap dipertahankan
+  // ==========================================
+
   function nextQuestion() {
     if (currentQuestion < TOTAL_SOAL) {
-      setCurrentQuestion(currentQuestion + 1);
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      setCurrentQuestion((prev) => prev + 1);
     }
   }
 
   function previousQuestion() {
     if (currentQuestion > 1) {
-      setCurrentQuestion(currentQuestion - 1);
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      setCurrentQuestion((prev) => prev - 1);
     }
   }
 
   function goToQuestion(nomor: number) {
-    setCurrentQuestion(nomor);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    if (nomor >= 1 && nomor <= TOTAL_SOAL) {
+      setCurrentQuestion(nomor);
+    }
   }
 
+  // ==========================================
+  // SUBMIT POST TEST
+  // ==========================================
+
   async function handleSubmit() {
+    if (loading || submitted) {
+      return;
+    }
+
     if (!nama.trim()) {
       alert("Nama belum diisi.");
       return;
@@ -206,16 +244,12 @@ export default function PostTestPage() {
     }
 
     if (!email.trim()) {
-      alert(
-        "Email belum diisi."
-      );
+      alert("Email belum diisi.");
       return;
     }
 
     if (!isValidEmail(email)) {
-      alert(
-        "Format Email tidak valid."
-      );
+      alert("Format Email tidak valid.");
       return;
     }
 
@@ -224,6 +258,7 @@ export default function PostTestPage() {
       return;
     }
 
+    // Pastikan semua 14 kolom sudah diisi
     const soalKosong = answers.some(
       (answer) => !answer.trim()
     );
@@ -236,34 +271,27 @@ export default function PostTestPage() {
 
       setCurrentQuestion(nomorKosong);
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-
       alert(
-        `Soal nomor ${nomorKosong} belum dijawab.`
+        `Jawaban nomor ${nomorKosong} belum diisi.`
       );
 
       return;
     }
 
-    const detail = answers.map(
-      (answer, index) =>
-        checkAnswer(
-          answer,
-          index + 1
-        )
-    );
+    // Hitung jawaban benar yang unik
+    const detail = calculateAnswerDetails(answers);
 
     const benar = detail.filter(Boolean).length;
 
+    // Salah termasuk jawaban duplikat
     const salah = TOTAL_SOAL - benar;
 
+    // Nilai maksimal 100
     const nilai = Math.round(
       (benar / TOTAL_SOAL) * 100
     );
 
+    // Simpan hasil ke state
     setResult({
       benar,
       salah,
@@ -280,58 +308,50 @@ export default function PostTestPage() {
     });
 
     setLoading(true);
-
-    setSaveStatus(
-      "Menyimpan jawaban..."
-    );
-
+    setSaveStatus("Menyimpan jawaban...");
     setCertificateStatus("");
 
     try {
-      const response = await fetch(
-        "/api/submit",
-        {
-          method: "POST",
+      const response = await fetch("/api/submit", {
+        method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-          body: JSON.stringify({
-            testType: "post-test",
+        body: JSON.stringify({
+          testType: "post-test",
 
-            nama: nama.trim(),
-            nik: nik.trim(),
-            department,
-            email: email.trim().toLowerCase(),
-            tanggal,
+          nama: nama.trim(),
+          nik: nik.trim(),
+          department,
+          email: email.trim().toLowerCase(),
+          tanggal,
 
-            q14Answers: answers,
+          q14Answers: answers,
 
-            benar,
-            salah,
-            total: TOTAL_SOAL,
-            nilai,
-          }),
-        }
-      );
+          benar,
+          salah,
+          total: TOTAL_SOAL,
+          nilai,
+        }),
+      });
 
       const data = await response.json();
 
-      if (
-        !response.ok ||
-        !data.success
-      ) {
+      if (!response.ok || !data.success) {
         throw new Error(
-          data.message ||
-            "Gagal menyimpan data."
+          data.message || "Gagal menyimpan data."
         );
       }
 
       setSaveStatus(
         "✓ Jawaban berhasil disimpan."
       );
+
+      // ======================================
+      // SERTIFIKAT
+      // ======================================
 
       if (nilai >= 80) {
         if (data.certificateSent) {
@@ -348,6 +368,7 @@ export default function PostTestPage() {
           "Nilai belum mencapai 80, sehingga sertifikat belum diterbitkan."
         );
       }
+
     } catch (error) {
       console.error(error);
 
@@ -356,17 +377,21 @@ export default function PostTestPage() {
       );
 
       setCertificateStatus("");
+
     } finally {
       setLoading(false);
     }
   }
+
+  // ==========================================
+  // RESET TEST
+  // ==========================================
 
   function handleReset() {
     setNama("");
     setNik("");
     setDepartment("");
     setEmail("");
-
     setTanggal(getToday());
 
     setAnswers(
@@ -390,13 +415,24 @@ export default function PostTestPage() {
     });
   }
 
+  // ==========================================
+  // PROGRESS
+  // ==========================================
+
   const progress =
     (currentQuestion / TOTAL_SOAL) * 100;
 
+  // ==========================================
+  // TAMPILAN
+  // ==========================================
+
   return (
     <main className="postPage">
+
+      {/* HEADER */}
       <header className="postHeader">
         <div className="postHeaderInner">
+
           <div className="brandBox">
             <div className="brandMain">
               BUMJIN
@@ -418,11 +454,14 @@ export default function PostTestPage() {
               Evaluasi pemahaman peserta
             </p>
           </div>
+
         </div>
       </header>
 
+      {/* HASIL POST TEST */}
       {result && (
         <section className="resultCard">
+
           <div className="resultTitle">
             HASIL POST TEST
           </div>
@@ -436,6 +475,7 @@ export default function PostTestPage() {
           </div>
 
           <div className="resultStats">
+
             <div>
               <strong>
                 {result.benar}
@@ -452,7 +492,7 @@ export default function PostTestPage() {
               </strong>
 
               <span>
-                Salah
+                Salah / Duplikat
               </span>
             </div>
 
@@ -462,9 +502,10 @@ export default function PostTestPage() {
               </strong>
 
               <span>
-                Total Soal
+                Total Jawaban
               </span>
             </div>
+
           </div>
 
           <div className="resultMessage">
@@ -478,27 +519,27 @@ export default function PostTestPage() {
               {certificateStatus}
             </div>
           )}
+
         </section>
       )}
 
+      {/* DATA KARYAWAN */}
       <section className="participantCard">
+
         <div className="sectionTitle">
           DATA KARYAWAN
         </div>
 
         <div className="participantGrid">
+
           <div className="fieldGroup">
-            <label>
-              Nama
-            </label>
+            <label>Nama</label>
 
             <input
               type="text"
               value={nama}
               onChange={(e) =>
-                setNama(
-                  e.target.value
-                )
+                setNama(e.target.value)
               }
               disabled={testStarted}
               placeholder="Masukkan nama lengkap"
@@ -507,17 +548,13 @@ export default function PostTestPage() {
           </div>
 
           <div className="fieldGroup">
-            <label>
-              NIK
-            </label>
+            <label>NIK</label>
 
             <input
               type="text"
               value={nik}
               onChange={(e) =>
-                setNik(
-                  e.target.value
-                )
+                setNik(e.target.value)
               }
               disabled={testStarted}
               placeholder="Masukkan NIK"
@@ -526,16 +563,12 @@ export default function PostTestPage() {
           </div>
 
           <div className="fieldGroup">
-            <label>
-              Department
-            </label>
+            <label>Department</label>
 
             <select
               value={department}
               onChange={(e) =>
-                setDepartment(
-                  e.target.value
-                )
+                setDepartment(e.target.value)
               }
               disabled={testStarted}
             >
@@ -543,31 +576,25 @@ export default function PostTestPage() {
                 Pilih Department
               </option>
 
-              {DEPARTMENTS.map(
-                (item) => (
-                  <option
-                    key={item}
-                    value={item}
-                  >
-                    {item}
-                  </option>
-                )
-              )}
+              {DEPARTMENTS.map((item) => (
+                <option
+                  key={item}
+                  value={item}
+                >
+                  {item}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="fieldGroup">
-            <label>
-              Email
-            </label>
+            <label>Email</label>
 
             <input
               type="email"
               value={email}
               onChange={(e) =>
-                setEmail(
-                  e.target.value
-                )
+                setEmail(e.target.value)
               }
               disabled={testStarted}
               placeholder="Masukkan email aktif"
@@ -576,45 +603,44 @@ export default function PostTestPage() {
           </div>
 
           <div className="fieldGroup">
-            <label>
-              Tanggal
-            </label>
+            <label>Tanggal</label>
 
             <input
               type="date"
               value={tanggal}
               onChange={(e) =>
-                setTanggal(
-                  e.target.value
-                )
+                setTanggal(e.target.value)
               }
               disabled={testStarted}
             />
           </div>
+
         </div>
 
         {!testStarted && (
           <button
             type="button"
             className="startTestButton"
-            onClick={
-              handleStartTest
-            }
+            onClick={handleStartTest}
           >
             MULAI POST TEST →
           </button>
         )}
+
       </section>
 
+      {/* TEST */}
       {testStarted && (
         <section className="testCard">
+
+          {/* PROGRESS */}
           {!submitted && (
             <>
               <div className="progressHeader">
+
                 <div>
                   <strong>
-                    Soal{" "}
-                    {currentQuestion}
+                    Jawaban {currentQuestion}
                   </strong>
 
                   <span>
@@ -624,73 +650,58 @@ export default function PostTestPage() {
                 </div>
 
                 <div className="progressPercent">
-                  {Math.round(
-                    progress
-                  )}
-                  %
+                  {Math.round(progress)}%
                 </div>
+
               </div>
 
               <div className="progressBar">
                 <div
                   className="progressFill"
                   style={{
-                    width:
-                      `${progress}%`,
+                    width: `${progress}%`,
                   }}
                 />
               </div>
             </>
           )}
 
+          {/* KOMPONEN SOAL */}
           <Soal14Q
-            nomor={
-              currentQuestion
-            }
+            nomor={currentQuestion}
+
             jawaban={
-              answers[
-                currentQuestion - 1
-              ]
+              answers[currentQuestion - 1]
             }
-            submitted={
-              submitted
-            }
+
+            submitted={submitted}
+
             benar={
-              submitted &&
-              result
-                ? result.detail[
-                    currentQuestion - 1
-                  ]
+              submitted && result
+                ? result.detail[currentQuestion - 1]
                 : null
             }
-            updateJawaban={
-              updateAnswer
-            }
+
+            updateJawaban={updateAnswer}
           />
 
+          {/* NAVIGASI */}
           {!submitted && (
             <div className="navigationButtons">
+
               <button
                 type="button"
-                onClick={
-                  previousQuestion
-                }
-                disabled={
-                  currentQuestion ===
-                  1
-                }
+                onClick={previousQuestion}
+                disabled={currentQuestion === 1}
                 className="btnPrevious"
               >
                 ← Sebelumnya
               </button>
 
-              {currentQuestion <
-              TOTAL_SOAL ? (
+              {currentQuestion < TOTAL_SOAL ? (
                 <button
                   type="button"
-                  onClick={
-                    nextQuestion
-                  }
+                  onClick={nextQuestion}
                   className="btnNext"
                 >
                   Berikutnya →
@@ -698,9 +709,7 @@ export default function PostTestPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={
-                    handleSubmit
-                  }
+                  onClick={handleSubmit}
                   className="btnSubmit"
                   disabled={loading}
                 >
@@ -709,18 +718,18 @@ export default function PostTestPage() {
                     : "SUBMIT POST TEST"}
                 </button>
               )}
+
             </div>
           )}
 
+          {/* SETELAH SUBMIT */}
           {submitted && (
             <div className="submittedActions">
-              {currentQuestion <
-                TOTAL_SOAL && (
+
+              {currentQuestion < TOTAL_SOAL && (
                 <button
                   type="button"
-                  onClick={
-                    nextQuestion
-                  }
+                  onClick={nextQuestion}
                   className="btnNext"
                 >
                   Soal Berikutnya →
@@ -729,82 +738,66 @@ export default function PostTestPage() {
 
               <button
                 type="button"
-                onClick={
-                  handleReset
-                }
+                onClick={handleReset}
                 className="btnNewTest"
               >
                 ISI TEST BARU
               </button>
+
             </div>
           )}
+
         </section>
       )}
 
+      {/* NAVIGATOR SOAL */}
       {testStarted && (
         <section className="questionNavigator">
+
           <div className="navigatorTitle">
-            Daftar Soal
+            Daftar Jawaban
           </div>
 
           <div className="numberGrid">
-            {answers.map(
-              (_, index) => {
-                const nomor =
-                  index + 1;
 
-                let className =
-                  "numberButton";
+            {answers.map((_, index) => {
+              const nomor = index + 1;
 
-                if (
-                  submitted &&
-                  result
-                ) {
-                  className +=
-                    result.detail[
-                      index
-                    ]
-                      ? " numberCorrect"
-                      : " numberWrong";
-                } else if (
-                  nomor ===
-                  currentQuestion
-                ) {
-                  className +=
-                    " numberActive";
-                } else if (
-                  answers[
-                    index
-                  ].trim()
-                ) {
-                  className +=
-                    " numberAnswered";
-                }
+              let className = "numberButton";
 
-                return (
-                  <button
-                    key={nomor}
-                    type="button"
-                    className={
-                      className
-                    }
-                    onClick={() =>
-                      goToQuestion(
-                        nomor
-                      )
-                    }
-                  >
-                    {nomor}
-                  </button>
-                );
+              if (submitted && result) {
+                className += result.detail[index]
+                  ? " numberCorrect"
+                  : " numberWrong";
+
+              } else if (nomor === currentQuestion) {
+                className += " numberActive";
+
+              } else if (answers[index].trim()) {
+                className += " numberAnswered";
               }
-            )}
+
+              return (
+                <button
+                  key={nomor}
+                  type="button"
+                  className={className}
+                  onClick={() => goToQuestion(nomor)}
+                >
+                  {nomor}
+                </button>
+              );
+            })}
+
           </div>
+
         </section>
       )}
 
+      {/* STATUS PENYIMPANAN */}
       {saveStatus && (
         <div className="saveStatus">
+
           {saveStatus}
 
           {loading && (
@@ -813,10 +806,13 @@ export default function PostTestPage() {
               Mohon tunggu...
             </span>
           )}
+
         </div>
       )}
 
+      {/* FOOTER */}
       <footer className="postFooter">
+
         <strong>
           BUMJIN ELECTRONICS INDONESIA
         </strong>
@@ -824,7 +820,9 @@ export default function PostTestPage() {
         <span>
           Quality Training Department
         </span>
+
       </footer>
+
     </main>
   );
 }
