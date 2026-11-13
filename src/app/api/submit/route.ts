@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { KUNCI_JAWABAN } from "../../kuncijawaban";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbx36XRqTysMyNdiE-T3iXhMLr0hG7PIOUHyd_zgWmfXxIMk0MrEFWylHjzLAHicmRuj/exec";
+  "https://script.google.com/macros/s/AKfycbzYHJ3x_w9ZQFjzPvj4qkkOdFU1-cqoj5JsHZH2QcgV4928BCXDehh6Ssiaq_AUMLbVNg/exec";
 
 const TOTAL_SOAL = 14;
 

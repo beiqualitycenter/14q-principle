@@ -1,16 +1,48 @@
+
 export const KUNCI_JAWABAN = [
-  ["Stop Sign", "Tanda stop", "Tanda berhenti", "Stop", "Berhenti", "Stop Sign", "Tanda Stop"],
-  ["Andon Cord", "EWS", "Early Warning System", "Andon", "Andon Cord", "Andon System", "Andon Cord System"],
+  ["Stop Sign", "Tanda stop", "Tanda berhenti", "Stop", "Berhenti"],
+  ["Andon Cord", "EWS", "Early Warning System", "Andon", "Andon System", "Andon Cord System"],
   ["Instructions", "Instruction", "Perintah", "Instruksi", "Instruksi kerja", "Instruksi kerja produksi"],
-  ["Process Parameters","Process Parameter", "Proces Parameter", "Proces Parameters", "Parameter proses",],
+  ["Process Parameters", "Process Parameter", "Proces Parameter", "Proces Parameters", "Parameter proses"],
   ["Measurement Equipment", "Alat ukur", "Alat pengukur", "Alat ukur proses", "Alat ukur produksi", "Alat ukur kualitas"],
-  ["Check the Checker", "Cek Checker", "Cek the Checker", "Cek the Checker", "Checker", "Cek Checker", "Cek the Checker", "Cek the Checker", "Checker"],
+  ["Check the Checker", "Cek Checker", "Cek the Checker", "Checker"],
   ["TPM", "Total Productive Maintenance", "Total Productive Maintenance (TPM)"],
   ["Tools", "Alat", "Peralatan", "Tooling", "Tool"],
   ["Restart", "Restart Mesin", "Restart Equipment", "Restart Peralatan", "Restart Mesin/Peralatan"],
   ["Labeling", "Label", "Pelabelan", "Pelabelan produk", "Labeling produk", "Label produk", "Labeling part", "Label part", "Pelabelan part", "Pelabel part"],
-  ["Rework", "Rework Product", "Produk rework","Rework Part", "Part rework", "Part yang dirework"],
+  ["Rework", "Rework Product", "Produk rework", "Rework Part", "Part rework", "Part yang dirework"],
   ["Scrap", "Scrap Product", "Produk scrap"],
   ["Dropped Parts", "Drop Parts", "Dropped Part", "Drop Part", "Part yang jatuh"],
   ["Correct Product", "Produk yang benar", "Produk benar"],
 ];
+
+/**
+Mengubah jawaban menjadi format standar
+agar perbedaan huruf besar/kecil dan spasi tidak memengaruhi penilaian.
+ */
+export function normalizeAnswer(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+/**
+Mencari prinsip 14Q berdasarkan seluruh
+variasi jawaban yang tersedia.
+ *
+Return:
+- index prinsip jika cocok
+- -1 jika tidak cocok
+ */
+export function findPrincipleIndex(answer: string): number {
+  const normalized = normalizeAnswer(answer);
+
+  if (!normalized) return -1;
+
+  return KUNCI_JAWABAN.findIndex((keys) =>
+    keys.some(
+      (key) => normalizeAnswer(key) === normalized
+    )
+  );
+}
